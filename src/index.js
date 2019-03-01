@@ -5,8 +5,8 @@ var co = require("co");
 var program = require("commander");
 var prompt = require("co-prompt");
 var confirm = require("co-prompt");
-var request = require("superagent");
 
+var appCenter = require("./appcenter.js");
 var logger = require("./logger.js");
 
 //#region MODEL
@@ -33,12 +33,42 @@ function handleFinish(systems, environments, product, displayName, team) {
     logger.info("--- Send configurations to AppCenter ---");
     logger.info("----------------------------------------");
 
-    process.exit(0);
+    var apps = [];
+    environments.forEach(env => {
+        systems.forEach(sys => {
+            apps.push({
+                display_name: displayName + " " + env.toUpperCase(),
+                name: product + "-" + env + "-" + sys.key.toLowerCase(),
+                os: sys.key,
+                platform: sys.platform,
+            });
+        });
+    });
+
+    apps.forEach(app => {
+        appCenter.createApp(app);
+    });
+
+    apps.forEach(app => {
+        appCenter.createClientDistributionGroup(app);
+    });
+
+    if (team != "") {
+        apps.forEach(app => {
+            appCenter.addTeamToApp(app, team);
+        });
+
+        apps.forEach(app => {
+            appCenter.updatePermissionsOfTeam(app, team);
+        });
+    }
 }
 
 program
     .option("-f, --fake", "Avoid REST API. Use for development only")
     .action(function() {
+        appCenter.isFake(program.fake || false);
+
         logger.info("----------------------------------------------");
         logger.info("--- Welcome to AppCenter Auto-Generate CLI ---");
         logger.info("----------------------------------------------");
@@ -127,7 +157,7 @@ program
             // Team Input
 
             logger.debug("\nTeam Name");
-            var team = yield prompt(chalk.blue("(empty to ignore) => "));
+            var team = yield prompt(chalk.blue(" => "));
 
             // Confirmation Input
 
@@ -151,7 +181,10 @@ program
                 process.exit(0);
             }
 
-            yield handleFinish(system, environments, product, displayName, team);
+            handleFinish(system, environments, product, displayName, team);
+
+            yield confirm(chalk.white("\nPress any key to finish..."));
+            process.exit(0);
         });
     })
     .parse(process.argv);

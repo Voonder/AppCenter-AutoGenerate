@@ -10,6 +10,9 @@ module.exports = {
     warning(message) {
         console.log(chalk.keyword("orange")(message));
     },
+    progress(message) {
+        console.log(chalk.gray(message));
+    },
     error(message) {
         console.log(chalk.bold.red(message));
     },
