@@ -4,6 +4,9 @@ module.exports = {
     debug(message) {
         console.log(chalk.white(message));
     },
+    log(message) {
+        console.log(chalk.yellow(message));
+    },
     info(message) {
         console.log(chalk.green(message));
     },

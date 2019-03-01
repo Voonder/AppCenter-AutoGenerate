@@ -8,9 +8,6 @@
         "generate": "node ./src/index.js",
         "generate-fake": "node ./src/index.js --fake"
     },
-    "bin": {
-        "": ""
-    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Voonder/AppCenter-AutoGenerate.git"
@@ -30,6 +27,7 @@
         "co-prompt": "1.0.0",
         "commander": "2.19.0",
         "progress": "2.0.3",
-        "superagent": "4.1.0"
+        "superagent": "4.1.0",
+        "superagent-throttle": "1.0.1"
     }
 }

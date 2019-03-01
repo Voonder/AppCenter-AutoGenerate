@@ -29,9 +29,9 @@ var platforms = [
 //#endregion
 
 function handleFinish(systems, environments, product, displayName, distributionGroup, team) {
-    logger.info("\n----------------------------------------");
-    logger.info("--- Send configurations to AppCenter ---");
-    logger.info("----------------------------------------");
+    logger.log("\n----------------------------------------");
+    logger.log("--- Send configurations to AppCenter ---");
+    logger.log("----------------------------------------");
 
     var apps = [];
     environments.forEach(env => {
@@ -53,10 +53,6 @@ function handleFinish(systems, environments, product, displayName, distributionG
         appCenter.createClientDistributionGroup(app);
     });
 
-    if (distributionGroup != "") {
-        appCenter.addDistributionGroupToApp(apps, distributionGroup);
-    }
-
     if (team != "") {
         apps.forEach(app => {
             appCenter.addTeamToApp(app, team);
@@ -66,6 +62,10 @@ function handleFinish(systems, environments, product, displayName, distributionG
             appCenter.updatePermissionsOfTeam(app, team);
         });
     }
+
+    if (distributionGroup != "") {
+        appCenter.addDistributionGroupToApp(apps, distributionGroup);
+    }
 }
 
 program
@@ -73,15 +73,15 @@ program
     .action(function() {
         appCenter.isFake(program.fake || false);
 
-        logger.info("----------------------------------------------");
-        logger.info("--- Welcome to AppCenter Auto-Generate CLI ---");
-        logger.info("----------------------------------------------");
+        logger.log("----------------------------------------------");
+        logger.log("--- Welcome to AppCenter Auto-Generate CLI ---");
+        logger.log("----------------------------------------------");
         logger.debug("AppCenter auto-generate can help you to create all apps slots for your mobile/desktop app.\n");
 
         co(function*() {
-            logger.info("--------------------------------");
-            logger.info("--- Setting up auto-generate ---");
-            logger.info("--------------------------------");
+            logger.log("--------------------------------");
+            logger.log("--- Setting up auto-generate ---");
+            logger.log("--------------------------------");
 
             // System Input
 
@@ -170,18 +170,18 @@ program
 
             // Confirmation Input
 
-            logger.info("\n----------------------");
-            logger.info("--- Confirm inputs ---");
-            logger.info("----------------------");
+            logger.log("\n----------------------");
+            logger.log("--- Confirm inputs ---");
+            logger.log("----------------------");
 
             system.forEach(s => {
-                logger.debug("\t - Systems: " + s.display + " | Platforms: " + s.platform);
+                logger.debug(" - Systems: " + s.display + " | Platforms: " + s.platform);
             });
-            logger.debug("\t - Environnements: " + environments.join(", ").toUpperCase());
-            logger.debug("\t - Product: " + product);
-            logger.debug("\t - Display Name: " + displayName);
-            logger.debug("\t - Distribution Group: " + distributionGroup);
-            logger.debug("\t - Team: " + team + "\n");
+            logger.debug(" - Environnements: " + environments.join(", ").toUpperCase());
+            logger.debug(" - Product: " + product);
+            logger.debug(" - Display Name: " + displayName);
+            logger.debug(" - Distribution Group: " + distributionGroup);
+            logger.debug(" - Team: " + team + "\n");
 
             logger.debug("Is correct?");
             var isValid = yield confirm(chalk.blue("(y/n) => "));
@@ -192,9 +192,6 @@ program
             }
 
             handleFinish(system, environments, product, displayName, distributionGroup, team);
-
-            yield confirm(chalk.white("\nPress any key to finish..."));
-            process.exit(0);
         });
     })
     .parse(process.argv);

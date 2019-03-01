@@ -1,7 +1,5 @@
-var co = require("co");
-var chalk = require("chalk");
 var request = require("superagent");
-var ProgressBar = require("progress");
+var Throttle = require("superagent-throttle");
 
 var logger = require("./logger.js");
 
@@ -11,11 +9,7 @@ const VERSION = "v0.1";
 const ORGANISATION = "";
 const TOKEN = "";
 
-var bar = new ProgressBar(chalk.grey("=> [:bar] :percent :etas"), {
-    width: 20,
-    total: 100,
-    clear: true,
-});
+var throttle = new Throttle({ concurrent: 1 });
 
 var isFake = false;
 
@@ -24,16 +18,7 @@ const agent = request
     .accept("application/json")
     .set("Content-Type", "application/json")
     .set("X-API-Token", TOKEN)
-    .on("progress", event => {
-        bar.tick(event.percent);
-    });
-// .then(res => {
-//     logger.progress("  => Success");
-// })
-// .catch(error => {
-//     logger.progress("  => Error");
-//     logger.error(JSON.stringify(error));
-// });
+    .use(throttle.plugin());
 
 module.exports = {
     isFake(value) {
@@ -41,40 +26,128 @@ module.exports = {
     },
     createApp(app) {
         var url = BASE_URL + VERSION + "/orgs/" + ORGANISATION + "/apps";
-        logger.warning("Creating " + app.display_name + " - " + app.os + " on AppCenter");
 
         if (!isFake) {
-            agent.post(url).send(JSON.stringify(app));
+            agent
+                .post(url)
+                .send(JSON.stringify(app))
+                .end((err, res) => {
+                    logger.warning('Creating "' + app.display_name + " - " + app.os + '" on AppCenter');
+
+                    if (err != null) {
+                        logger.error("  => ERROR: Unable to create app ");
+                        logger.error("\t" + JSON.stringify(err));
+                        process.exit(400);
+                    } else {
+                        logger.info("  => FINISH ");
+                    }
+                });
         } else {
             logger.progress(JSON.stringify(app));
         }
     },
     createClientDistributionGroup(app) {
         var url = BASE_URL + VERSION + "/apps/" + ORGANISATION + "/" + app.name + "/distribution_groups";
-        logger.warning("Creating Client Distribution Group for " + app.display_name + " - " + app.os);
 
         if (!isFake) {
-            agent.post(url).send({ name: "Client" });
+            agent
+                .post(url)
+                .send({ name: "Client" })
+                .end((err, res) => {
+                    logger.warning(
+                        'Creating Client Distribution Group for "' + app.display_name + " - " + app.os + '"',
+                    );
+
+                    if (err != null) {
+                        logger.error("  => ERROR: Unable to create client distribution group");
+                        logger.error("\t" + JSON.stringify(err));
+                        process.exit(400);
+                    } else {
+                        logger.info("  => FINISH ");
+                    }
+                });
         } else {
             logger.progress(JSON.stringify({ name: "Client" }));
         }
     },
-    addTeamToApp(app, team) {
-        var url = BASE_URL + VERSION;
-        logger.warning("Adding " + app.display_name + " - " + app.os + " to the team " + team);
+    addDistributionGroupToApp(apps, distributionGroup) {
+        var url = BASE_URL + VERSION + "/orgs/" + ORGANISATION + "/distribution_groups/" + distributionGroup + "/apps";
 
         if (!isFake) {
-            agent.post(url).send({ name: app.name });
+            agent
+                .post(url)
+                .send({
+                    apps: apps.map(a => {
+                        return { name: a.name };
+                    }),
+                })
+                .end((err, res) => {
+                    logger.warning('Adding Distribution Group "' + distributionGroup + '" to the app(s):"');
+                    apps.forEach(app => {
+                        logger.warning("- " + a.display_name + " - " + a.os);
+                    });
+
+                    if (err != null) {
+                        logger.error('  => ERROR: Unable to add distribution group "' + distributionGroup + '"');
+                        logger.error("\t" + JSON.stringify(err));
+                        process.exit(400);
+                    } else {
+                        logger.info("  => FINISH ");
+
+                        logger.log("\n--------------------------------------");
+                        logger.log("--- AppCenter configuration finish ---");
+                        logger.log("--------------------------------------");
+
+                        process.exit(0);
+                    }
+                });
+        } else {
+            logger.progress(JSON.stringify(apps));
+            logger.progress(distributionGroup);
+        }
+    },
+    addTeamToApp(app, team) {
+        var url = BASE_URL + VERSION + "/orgs/" + ORGANISATION + "/teams/" + team + "/apps";
+
+        if (!isFake) {
+            agent
+                .post(url)
+                .send({ name: app.name })
+                .end((err, res) => {
+                    logger.warning('Adding "' + app.display_name + " - " + app.os + '" to the team "' + team + '"');
+
+                    if (err != null) {
+                        logger.error('  => ERROR: Unable to add team "' + team + '"');
+                        logger.error("\t" + JSON.stringify(err));
+                        process.exit(400);
+                    } else {
+                        logger.info("  => FINISH ");
+                    }
+                });
         } else {
             logger.progress(JSON.stringify({ name: app.name }));
         }
     },
     updatePermissionsOfTeam(app, team) {
-        var url = BASE_URL + VERSION;
-        logger.warning("Update Team " + team + " permissions for " + app.display_name + " - " + app.os);
+        var url = BASE_URL + VERSION + "/orgs/" + ORGANISATION + "/teams/" + team + "/apps/" + app.name;
 
         if (!isFake) {
-            agent.patch(url).send({ permissions: ["manager"] });
+            agent
+                .patch(url)
+                .send({ permissions: ["manager"] })
+                .end((err, res) => {
+                    logger.warning(
+                        'Update team "' + team + '" permissions for "' + app.display_name + " - " + app.os + '"',
+                    );
+
+                    if (err != null) {
+                        logger.error('  => ERROR: Unable to update team "' + team + '" permissions');
+                        logger.error("\t" + JSON.stringify(err));
+                        process.exit(400);
+                    } else {
+                        logger.info("  => FINISH ");
+                    }
+                });
         } else {
             logger.progress(JSON.stringify({ permissions: ["manager"] }));
         }
