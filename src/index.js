@@ -28,7 +28,7 @@ var platforms = [
 
 //#endregion
 
-function handleFinish(systems, environments, product, displayName, team) {
+function handleFinish(systems, environments, product, displayName, distributionGroup, team) {
     logger.info("\n----------------------------------------");
     logger.info("--- Send configurations to AppCenter ---");
     logger.info("----------------------------------------");
@@ -52,6 +52,10 @@ function handleFinish(systems, environments, product, displayName, team) {
     apps.forEach(app => {
         appCenter.createClientDistributionGroup(app);
     });
+
+    if (distributionGroup != "") {
+        appCenter.addDistributionGroupToApp(apps, distributionGroup);
+    }
 
     if (team != "") {
         apps.forEach(app => {
@@ -154,6 +158,11 @@ program
                 process.exit(0);
             }
 
+            // Distribution Group Input
+
+            logger.debug("\nDistribution Group");
+            var distributionGroup = yield prompt(chalk.blue(" => "));
+
             // Team Input
 
             logger.debug("\nTeam Name");
@@ -171,6 +180,7 @@ program
             logger.debug("\t - Environnements: " + environments.join(", ").toUpperCase());
             logger.debug("\t - Product: " + product);
             logger.debug("\t - Display Name: " + displayName);
+            logger.debug("\t - Distribution Group: " + distributionGroup);
             logger.debug("\t - Team: " + team + "\n");
 
             logger.debug("Is correct?");
@@ -181,7 +191,7 @@ program
                 process.exit(0);
             }
 
-            handleFinish(system, environments, product, displayName, team);
+            handleFinish(system, environments, product, displayName, distributionGroup, team);
 
             yield confirm(chalk.white("\nPress any key to finish..."));
             process.exit(0);
