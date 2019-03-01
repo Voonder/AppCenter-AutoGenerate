@@ -14,45 +14,25 @@ var logger = require("./logger.js");
 var systems = [
     { id: 1, key: "Android", display: "Android", platform: "Java" },
     { id: 2, key: "iOS", display: "iOS", platform: "Objective-C-Swift" },
-    { id: 3, key: "macOS", display: "macOS" },
-    { id: 4, key: "Tizen", display: "Tizen" },
-    { id: 5, key: "tvOS", display: "tvOS" },
-    { id: 6, key: "Windows", display: "Windows" },
+    { id: 3, key: "macOS", display: "macOS", platform: "Objective-C-Swift" },
+    { id: 4, key: "Windows", display: "Windows", platform: "UWP" },
 ];
 
 var platforms = [
     { id: 1, display: "Native" },
-    { id: 2, key: "UWP", display: "UWP" },
-    { id: 3, key: "Cordova", display: "Cordova" },
-    { id: 4, key: "React-Native", display: "React-Native" },
-    { id: 5, key: "Xamarin", display: "Xamarin" },
-    { id: 6, key: "Unity", display: "Unity" },
+    { id: 2, key: "Cordova", display: "Cordova" },
+    { id: 3, key: "React-Native", display: "React-Native" },
+    { id: 4, key: "Xamarin", display: "Xamarin" },
+    { id: 5, key: "Unity", display: "Unity" },
 ];
 
 //#endregion
 
-//#region APP CENTER CONFIGURATION
+function handleFinish(systems, environments, product, displayName, team) {
+    logger.info("\n----------------------------------------");
+    logger.info("--- Send configurations to AppCenter ---");
+    logger.info("----------------------------------------");
 
-//#endregion
-
-function createApp(appName, os, platform) {
-    request
-        .post(BASE_URL + VERSION + "/orgs/" + ORGANISATION + "/apps")
-        .send({
-            display_name: appName,
-            name: "",
-            os: os,
-            platform: platform,
-        })
-        .set("Accept", "application/json")
-        .end(function(err, res) {
-            if (!err && res.ok) {
-            } else {
-            }
-        });
-}
-
-function handleFinish(os, language, environments, product, displayName, team) {
     process.exit(0);
 }
 
@@ -75,21 +55,21 @@ program
             systems.forEach(system => {
                 logger.debug(system.id + ". " + system.display);
             });
-            var os = yield prompt(chalk.blue("(1,2) => "));
-            if (os == "") {
-                os = "1,2";
+            var systemInput = yield prompt(chalk.blue("(1,2) => "));
+            if (systemInput == "") {
+                systemInput = "1,2";
             }
-            os = os
+            systemInput = systemInput
                 .replace(/\s/g, "")
                 .toLowerCase()
                 .split(/[,.]/);
-            os.forEach(id => {
-                if (0 < id && id <= systems.length) {
-                } else {
-                    logger.error("Entry " + id + " not valid.");
-                    process.exit(0);
-                }
+            var system = systemInput.map(input => {
+                return systems.find(s => s.id == input);
             });
+            if (system.length != systemInput.length) {
+                logger.error("Entry " + systemInput.join(",") + "not valid.");
+                process.exit(0);
+            }
 
             // Platform Input
 
@@ -97,14 +77,19 @@ program
             platforms.forEach(platform => {
                 logger.debug(platform.id + ". " + platform.display);
             });
-            var language = yield prompt(chalk.blue("(1) => "));
-            language = language.replace(/\s/g, "").toLowerCase();
-            if (language == "") {
-                language = "1";
+            var platformInput = yield prompt(chalk.blue("(1) => "));
+            platformInput = platformInput.replace(/\s/g, "").toLowerCase();
+            if (platformInput == "") {
+                platformInput = "1";
             }
-            if (0 < language && language <= platforms.length) {
+            if (0 < platformInput && platformInput <= platforms.length) {
+                system.forEach(s => {
+                    if (platformInput != 1) {
+                        s.platform = platforms.find(p => p.id == platformInput).key;
+                    }
+                });
             } else {
-                logger.error("Entry " + language + " not valid.");
+                logger.error("Entry " + platformInput + " not valid.");
                 process.exit(0);
             }
 
@@ -150,24 +135,10 @@ program
             logger.info("--- Confirm inputs ---");
             logger.info("----------------------");
 
-            var sInfo = "\t - Systems: ";
-            os.forEach(id => {
-                var value = systems.find(function(s) {
-                    return s.id == id;
-                });
-                if (value != undefined) {
-                    sInfo += value.display + " ";
-                }
+            system.forEach(s => {
+                logger.debug("\t - Systems: " + s.display + " | Platforms: " + s.platform);
             });
-
-            logger.debug(sInfo);
-            logger.debug(
-                "\t - Platforms: " +
-                    platforms.find(function(p) {
-                        return language == p.id;
-                    }).display,
-            );
-            logger.debug("\t - Environnements: " + environments);
+            logger.debug("\t - Environnements: " + environments.join(", ").toUpperCase());
             logger.debug("\t - Product: " + product);
             logger.debug("\t - Display Name: " + displayName);
             logger.debug("\t - Team: " + team + "\n");
@@ -180,7 +151,7 @@ program
                 process.exit(0);
             }
 
-            yield handleFinish(os, language, environments, product, displayName, team);
+            yield handleFinish(system, environments, product, displayName, team);
         });
     })
     .parse(process.argv);

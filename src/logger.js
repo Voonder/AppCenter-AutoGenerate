@@ -8,7 +8,7 @@ module.exports = {
         console.log(chalk.green(message));
     },
     warning(message) {
-        console.log(chalk.orange(message));
+        console.log(chalk.keyword("orange")(message));
     },
     error(message) {
         console.log(chalk.bold.red(message));
