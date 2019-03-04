@@ -174,8 +174,9 @@ program
             logger.log("--- Confirm inputs ---");
             logger.log("----------------------");
 
+            logger.debug(" - Systems: ");
             system.forEach(s => {
-                logger.debug(" - Systems: " + s.display + " | Platforms: " + s.platform);
+                logger.debug("   - " + s.display + " | " + s.platform);
             });
             logger.debug(" - Environnements: " + environments.join(", ").toUpperCase());
             logger.debug(" - Product: " + product);

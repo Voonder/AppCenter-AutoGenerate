@@ -43,6 +43,7 @@ module.exports = {
                     }
                 });
         } else {
+            logger.warning('Creating "' + app.display_name + " - " + app.os + '" on AppCenter');
             logger.progress(JSON.stringify(app));
         }
     },
@@ -67,23 +68,24 @@ module.exports = {
                     }
                 });
         } else {
+            logger.warning('Creating Client Distribution Group for "' + app.display_name + " - " + app.os + '"');
             logger.progress(JSON.stringify({ name: "Client" }));
         }
     },
     addDistributionGroupToApp(apps, distributionGroup) {
         var url = BASE_URL + VERSION + "/orgs/" + ORGANISATION + "/distribution_groups/" + distributionGroup + "/apps";
 
+        var formatedApps = apps.map(a => {
+            return { name: a.name };
+        });
+
         if (!isFake) {
             agent
                 .post(url)
-                .send({
-                    apps: apps.map(a => {
-                        return { name: a.name };
-                    }),
-                })
+                .send({ apps: formatedApps })
                 .end((err, res) => {
                     logger.warning('Adding Distribution Group "' + distributionGroup + '" to the app(s):"');
-                    apps.forEach(app => {
+                    apps.forEach(a => {
                         logger.warning("- " + a.display_name + " - " + a.os);
                     });
 
@@ -102,8 +104,17 @@ module.exports = {
                     }
                 });
         } else {
-            logger.progress(JSON.stringify(apps));
-            logger.progress(distributionGroup);
+            logger.warning('Adding Distribution Group "' + distributionGroup + '" to the app(s):"');
+            apps.forEach(a => {
+                logger.warning("- " + a.display_name + " - " + a.os);
+            });
+            logger.progress(JSON.stringify(formatedApps));
+
+            logger.log("\n--------------------------------------");
+            logger.log("--- AppCenter configuration finish ---");
+            logger.log("--------------------------------------");
+
+            process.exit(0);
         }
     },
     addTeamToApp(app, team) {
@@ -125,6 +136,7 @@ module.exports = {
                     }
                 });
         } else {
+            logger.warning('Adding "' + app.display_name + " - " + app.os + '" to the team "' + team + '"');
             logger.progress(JSON.stringify({ name: app.name }));
         }
     },
@@ -149,6 +161,7 @@ module.exports = {
                     }
                 });
         } else {
+            logger.warning('Update team "' + team + '" permissions for "' + app.display_name + " - " + app.os + '"');
             logger.progress(JSON.stringify({ permissions: ["manager"] }));
         }
     },
