@@ -109,14 +109,7 @@ program
 
             // System Input
 
-            logger.debug("Select the OS the app will be running on (separate with comma if multiple)\n");
-            systems.forEach(system => {
-                logger.debug(system.id + ". " + system.display);
-            });
-            var systemInput = yield prompt(chalk.blue("(1,2) => "));
-            if (systemInput == "") {
-                systemInput = "1,2";
-            }
+            var systemInput = "1,2";
             systemInput = systemInput
                 .replace(/\s/g, "")
                 .toLowerCase()
@@ -124,40 +117,19 @@ program
             var system = systemInput.map(input => {
                 return systems.find(s => s.id == input);
             });
-            if (system.length != systemInput.length) {
-                logger.error("Entry " + systemInput.join(",") + "not valid.");
-                process.exit(0);
-            }
 
             // Platform Input
 
-            logger.debug("\nSelect the platform of the app will be running");
-            platforms.forEach(platform => {
-                logger.debug(platform.id + ". " + platform.display);
+            var platformInput = "2";
+            system.forEach(s => {
+                if (platformInput != 1) {
+                    s.platform = platforms.find(p => p.id == platformInput).key;
+                }
             });
-            var platformInput = yield prompt(chalk.blue("(1) => "));
-            platformInput = platformInput.replace(/\s/g, "").toLowerCase();
-            if (platformInput == "") {
-                platformInput = "1";
-            }
-            if (0 < platformInput && platformInput <= platforms.length) {
-                system.forEach(s => {
-                    if (platformInput != 1) {
-                        s.platform = platforms.find(p => p.id == platformInput).key;
-                    }
-                });
-            } else {
-                logger.error("Entry " + platformInput + " not valid.");
-                process.exit(0);
-            }
 
             // Environment Input
 
-            logger.debug("\nInsert the list of environment (separate with comma if multiple)");
-            var environments = yield prompt(chalk.blue("(itg,prp,prod) => "));
-            if (environments == "") {
-                environments = "itg,prp,prod";
-            }
+            var environments = "itg,prp,prod";
             environments = environments
                 .replace(/\s/g, "")
                 .toLowerCase()
@@ -184,13 +156,11 @@ program
 
             // Distribution Group Input
 
-            logger.debug("\nDistribution Group");
-            var distributionGroup = yield prompt(chalk.blue(" => "));
+            var distributionGroup = "MxDMP - Interne";
 
             // Team Input
 
-            logger.debug("\nTeam Name");
-            var team = yield prompt(chalk.blue(" => "));
+            var team = "MxDMP";
 
             // Confirmation Input
 
