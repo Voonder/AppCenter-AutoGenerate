@@ -186,11 +186,13 @@ program
 
             logger.debug("\nDistribution Group");
             var distributionGroup = yield prompt(chalk.blue(" => "));
+            distributionGroup = distributionGroup.replace(/\s/g, "%20");
 
             // Team Input
 
             logger.debug("\nTeam Name");
             var team = yield prompt(chalk.blue(" => "));
+            team = team.replace(/\s/g, "-");
 
             // Confirmation Input
 
